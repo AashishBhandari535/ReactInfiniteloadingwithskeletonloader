@@ -1,47 +1,52 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect,useRef, useCallback } from "react";
 import Skeleton from "./Skeleton";
+import axios from "axios";
 
 function App() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [offset,setOffset] = useState(0)
+  const [offset, setOffset] = useState(0);
   const limit = 12;
   useEffect(() => {
     async function loadData() {
-      const response = await fetch(
-        `https://api.escuelajs.co/api/v1/products?offset=${offset}&limit=${limit}`
-      );
-      const datas = await response.json()
-      setData((prev) => [...prev,...datas]);
+      const {data} = await axios({
+        method: "GET",
+        url: "https://api.escuelajs.co/api/v1/products",
+        params: { offset: offset, limit: limit },
+      });
+      console.log(data)
+      setData((prev) => [...prev, ...data]);
       //setData((prev)=>prev.concat(datas))
-      setLoading(false)
+      setLoading(false);
     }
-    loadData()
-  },[offset]);
+    loadData();
+  }, [offset]);
   const handleInfiniteScroll = async () => {
     // console.log("scrollHeight"+document.documentElement.scrollHeight);
     // console.log("innerHeight"+window.innerHeight);
     // console.log("scrollTop"+document.documentElement.scrollTop)
-    try{
-      if((window.innerHeight+document.documentElement.scrollTop+1) >= document.documentElement.scrollHeight){
-        setOffset(prev => prev + limit)
-        setLoading(true)
+    try {
+      if (
+        window.innerHeight + document.documentElement.scrollTop + 1 >=
+        document.documentElement.scrollHeight
+      ) {
+        setOffset((prev) => prev + limit);
+        setLoading(true);
       }
-    }catch(err){
-      console.log(err)
+    } catch (err) {
+      console.log(err);
     }
-  }
+  };
   useEffect(() => {
-    window.addEventListener("scroll",handleInfiniteScroll);
-  },[])
+    window.addEventListener("scroll", handleInfiniteScroll);
+  }, []);
+
   return (
     <>
       <div className="container">
         <div className="product">
-          {loading ? (
-            <Skeleton />
-          ) : (
-            data&&data.map((item, index) => (
+          {data &&
+            data.map((item, index) => (
               <div className="productCard " key={index}>
                 <figure className="productCard__img ">
                   <img src={item.images[0]} alt="img" />
@@ -60,8 +65,8 @@ function App() {
                   </ul>
                 </div>
               </div>
-            ))
-          )}
+            ))}
+            {loading && <Skeleton/>}
         </div>
       </div>
     </>
@@ -69,3 +74,4 @@ function App() {
 }
 
 export default App;
+// https://dev.to/designly/create-a-responsive-animated-sidebar-using-react-nextjs-and-tailwind-css-1ml3
